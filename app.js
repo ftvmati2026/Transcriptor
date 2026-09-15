@@ -1,11 +1,11 @@
 // app.js — hilo principal: maneja la UI y orquesta ffmpeg.wasm + el worker.
 //
-// ffmpeg.wasm se carga como script clásico (UMD) desde index.html, no como
-// módulo ES: si se importa como módulo desde un CDN, la librería intenta
-// crear un Worker interno apuntando al script del CDN, y el navegador lo
-// bloquea porque un Worker no puede crearse con un script de otro origen.
-// Cargándolo como UMD y convirtiendo los archivos del core a blob URLs
-// (con toBlobURL) evitamos ese problema por completo.
+// ffmpeg.wasm se carga como script clásico (UMD) desde archivos propios en
+// vendor/ffmpeg/ (no desde un CDN): la librería crea internamente un Worker
+// apuntando siempre a la ubicación de donde se la cargó, y un Worker no
+// puede crearse con un script de otro origen. Auto-hosteando los archivos
+// junto con el resto del sitio, el Worker queda en el mismo origen y no
+// hay restricción posible.
 const { FFmpeg } = FFmpegWASM;
 const { fetchFile, toBlobURL } = FFmpegUtil;
 

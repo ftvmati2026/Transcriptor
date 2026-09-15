@@ -78,8 +78,23 @@ poco común en archivos de uso normal.
 ## Estructura
 
 ```
-index.html    → interfaz
-styles.css    → estilos
-app.js        → UI + ffmpeg.wasm + orquestación
-worker.js     → carga y corre el modelo Whisper en segundo plano
+index.html         → interfaz
+styles.css         → estilos
+app.js             → UI + ffmpeg.wasm + orquestación
+worker.js          → carga y corre el modelo Whisper en segundo plano
+vendor/ffmpeg/     → ffmpeg.wasm auto-hosteado (ver más abajo)
 ```
+
+## Por qué ffmpeg.wasm está auto-hosteado (carpeta vendor/)
+
+`@ffmpeg/ffmpeg` crea internamente un Web Worker apuntando siempre al
+mismo sitio de donde se cargó el script. Si se lo carga desde un CDN
+(unpkg, jsdelivr), ese Worker termina apuntando al CDN, y los navegadores
+no permiten crear un Worker con un script de otro origen que la página —
+tira `Failed to construct 'Worker'`. La solución es alojar esos archivos
+junto con el resto del sitio, así el Worker queda en el mismo origen. Por
+eso `vendor/ffmpeg/ffmpeg.js`, `vendor/ffmpeg/814.ffmpeg.js` y
+`vendor/ffmpeg/ffmpeg-util.js` viajan en el repo en vez de importarse
+desde un CDN. El core de ffmpeg (`ffmpeg-core.js`/`.wasm`, mucho más
+pesado) sí se sigue trayendo de un CDN en tiempo de ejecución, porque ese
+no se carga como Worker, sino que se descarga como datos.
