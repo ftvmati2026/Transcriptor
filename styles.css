@@ -1,0 +1,249 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+:root {
+  --ink: #14171c;
+  --ink-raised: #1b1f26;
+  --paper: #ede7dc;
+  --paper-dim: #9a9488;
+  --line: #2a2f38;
+  --amber: #d9822b;
+  --amber-dim: #7a5326;
+  --ok: #6fae7a;
+  --font-ui: 'Space Grotesk', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-ui);
+  line-height: 1.5;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.mark {
+  color: var(--amber);
+  font-size: 1.1rem;
+}
+
+.topbar-title {
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+main {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 5rem;
+}
+
+.hero h1 {
+  font-size: 2rem;
+  line-height: 1.25;
+  font-weight: 600;
+  margin: 0 0 0.75rem;
+  max-width: 22ch;
+}
+
+.lede {
+  color: var(--paper-dim);
+  font-size: 1.05rem;
+  margin: 0 0 2.5rem;
+  max-width: 46ch;
+}
+
+.dropzone {
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 3rem 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+  background: var(--ink-raised);
+}
+
+.dropzone:hover,
+.dropzone:focus-visible,
+.dropzone.dragover {
+  border-color: var(--amber);
+  outline: none;
+}
+
+.dropzone-icon {
+  display: inline-block;
+  font-size: 1.4rem;
+  color: var(--amber);
+  margin-bottom: 0.75rem;
+}
+
+.dropzone-text {
+  margin: 0 0 0.25rem;
+  font-size: 1.05rem;
+}
+
+.dropzone-sub {
+  margin: 0;
+  color: var(--paper-dim);
+  font-size: 0.9rem;
+}
+
+.file-info {
+  margin-top: 1.5rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 1.1rem 1.25rem;
+}
+
+.file-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.file-name {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+}
+
+.file-meta {
+  color: var(--paper-dim);
+  font-size: 0.85rem;
+  font-family: var(--font-mono);
+}
+
+.actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.btn {
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  padding: 0.55rem 1rem;
+  border-radius: 3px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--paper);
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.btn-primary {
+  background: var(--amber);
+  border-color: var(--amber);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.btn-primary:hover { background: #e6913e; }
+
+.btn-secondary:hover,
+.btn-ghost:hover { border-color: var(--paper-dim); }
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.progress-section {
+  margin-top: 1.5rem;
+}
+
+.progress-label {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  margin-bottom: 0.4rem;
+}
+
+.progress-track {
+  height: 6px;
+  background: var(--ink-raised);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  width: 0%;
+  background: var(--amber);
+  transition: width 0.2s ease;
+}
+
+.progress-detail {
+  margin: 0.5rem 0 0;
+  color: var(--paper-dim);
+  font-size: 0.8rem;
+  font-family: var(--font-mono);
+}
+
+.result-section {
+  margin-top: 2rem;
+}
+
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+.result-header h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.transcript-output {
+  width: 100%;
+  min-height: 260px;
+  background: var(--ink-raised);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: var(--paper);
+  font-family: var(--font-mono);
+  font-size: 0.92rem;
+  line-height: 1.6;
+  padding: 1rem;
+  resize: vertical;
+}
+
+.audio-preview {
+  width: 100%;
+  margin-bottom: 0.75rem;
+}
+
+.note {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+
+.note p {
+  color: var(--paper-dim);
+  font-size: 0.85rem;
+  margin: 0;
+  max-width: 55ch;
+}
+
+.hidden { display: none; }

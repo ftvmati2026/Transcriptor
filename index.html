@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Transcriptor — audio y video a texto</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <header class="topbar">
+    <span class="mark">◈</span>
+    <span class="topbar-title">Transcriptor</span>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h1>Convertí audio y video en texto, sin subir nada a ningún lado.</h1>
+      <p class="lede">Todo el procesamiento corre en tu navegador. El archivo nunca sale de tu máquina.</p>
+    </section>
+
+    <section id="dropzone" class="dropzone" tabindex="0">
+      <input type="file" id="fileInput" accept="audio/*,video/*" hidden />
+      <div class="dropzone-inner">
+        <span class="dropzone-icon">↓</span>
+        <p class="dropzone-text">Soltá un archivo de audio o video acá</p>
+        <p class="dropzone-sub">o hacé clic para elegirlo — cualquier tamaño, cualquier duración</p>
+      </div>
+    </section>
+
+    <section id="fileInfo" class="file-info hidden">
+      <div class="file-info-row">
+        <span id="fileName" class="file-name"></span>
+        <span id="fileMeta" class="file-meta"></span>
+      </div>
+      <div class="actions">
+        <button id="btnTranscribe" class="btn btn-primary">Transcribir a texto</button>
+        <button id="btnExtractAudio" class="btn btn-secondary">Solo extraer audio</button>
+        <button id="btnReset" class="btn btn-ghost">Cambiar archivo</button>
+      </div>
+    </section>
+
+    <section id="progressSection" class="progress-section hidden">
+      <div class="progress-label">
+        <span id="progressStage">Preparando…</span>
+        <span id="progressPct">0%</span>
+      </div>
+      <div class="progress-track">
+        <div id="progressBar" class="progress-bar"></div>
+      </div>
+      <p id="progressDetail" class="progress-detail"></p>
+    </section>
+
+    <section id="resultSection" class="result-section hidden">
+      <div class="result-header">
+        <h2>Transcripción</h2>
+        <div class="actions">
+          <button id="btnDownloadTxt" class="btn btn-secondary">Descargar .txt</button>
+          <button id="btnCopy" class="btn btn-ghost">Copiar</button>
+        </div>
+      </div>
+      <textarea id="transcriptOutput" class="transcript-output" spellcheck="false"></textarea>
+    </section>
+
+    <section id="audioResultSection" class="result-section hidden">
+      <div class="result-header">
+        <h2>Audio extraído</h2>
+      </div>
+      <audio id="audioPreview" controls class="audio-preview"></audio>
+      <div class="actions">
+        <a id="btnDownloadAudio" class="btn btn-secondary" download="audio.wav">Descargar .wav</a>
+      </div>
+    </section>
+
+    <section class="note">
+      <p>La primera vez que transcribís, el navegador descarga el modelo de reconocimiento de voz (puede tardar según tu conexión). Después queda guardado localmente y arranca al toque.</p>
+    </section>
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
