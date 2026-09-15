@@ -1,12 +1,18 @@
 // app.js — hilo principal: maneja la UI y orquesta ffmpeg.wasm + el worker.
-
-import { FFmpeg } from "https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/+esm";
-import { fetchFile } from "https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/+esm";
+//
+// ffmpeg.wasm se carga como script clásico (UMD) desde index.html, no como
+// módulo ES: si se importa como módulo desde un CDN, la librería intenta
+// crear un Worker interno apuntando al script del CDN, y el navegador lo
+// bloquea porque un Worker no puede crearse con un script de otro origen.
+// Cargándolo como UMD y convirtiendo los archivos del core a blob URLs
+// (con toBlobURL) evitamos ese problema por completo.
+const { FFmpeg } = FFmpegWASM;
+const { fetchFile, toBlobURL } = FFmpegUtil;
 
 // Core de ffmpeg de un solo hilo: no necesita los headers COOP/COEP que
 // GitHub Pages no te deja configurar, a costa de ser algo más lento que
 // la versión multi-hilo.
-const FFMPEG_CORE_BASE = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm";
+const FFMPEG_CORE_BASE = "https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd";
 
 const CHUNK_SECONDS = 28; // ventana nativa de whisper es de 30s, dejamos margen
 const SAMPLE_RATE = 16000;
@@ -123,8 +129,8 @@ async function getFFmpeg() {
     setProgress("Convirtiendo el archivo…", progress * 100);
   });
   await ffmpeg.load({
-    coreURL: `${FFMPEG_CORE_BASE}/ffmpeg-core.js`,
-    wasmURL: `${FFMPEG_CORE_BASE}/ffmpeg-core.wasm`,
+    coreURL: await toBlobURL(`${FFMPEG_CORE_BASE}/ffmpeg-core.js`, "text/javascript"),
+    wasmURL: await toBlobURL(`${FFMPEG_CORE_BASE}/ffmpeg-core.wasm`, "application/wasm"),
   });
   ffmpegReady = true;
   return ffmpeg;
