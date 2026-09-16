@@ -55,6 +55,73 @@ function tickClock() {
 tickClock();
 setInterval(tickClock, 1000);
 
+// ---------- Fondo animado: manchas de color tipo "ambient glow" ----------
+// Unas cuantas manchas de color grandes y difusas que flotan solas y
+// reaccionan un poco a dónde está el mouse (efecto de profundidad/parallax),
+// dibujadas en un <canvas> detrás de todo el contenido.
+function initBgCanvas() {
+  const canvas = document.getElementById("bgCanvas");
+  const ctx = canvas.getContext("2d");
+  let w, h;
+  let mouseX = 0.5, mouseY = 0.5; // 0..1
+
+  function resize() {
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener("resize", resize);
+  window.addEventListener("pointermove", (e) => {
+    mouseX = e.clientX / window.innerWidth;
+    mouseY = e.clientY / window.innerHeight;
+  });
+
+  const palette = ["#ff6b6b", "#ffa94d", "#cc5de8", "#20c997", "#ffd43b", "#7fd0ff"];
+  const blobs = palette.map((color, i) => ({
+    color,
+    baseX: Math.random(),
+    baseY: Math.random(),
+    r: 220 + Math.random() * 160,
+    speed: 0.00025 + Math.random() * 0.0004,
+    phase: Math.random() * Math.PI * 2,
+    depth: 20 + i * 10, // cuánto reacciona al mouse (parallax)
+  }));
+
+  function draw(t) {
+    ctx.clearRect(0, 0, w, h);
+    ctx.globalCompositeOperation = "lighter";
+    for (const b of blobs) {
+      const drift = Math.sin(t * b.speed + b.phase);
+      const x = b.baseX * w + drift * 60 + (mouseX - 0.5) * b.depth;
+      const y = b.baseY * h + Math.cos(t * b.speed + b.phase) * 60 + (mouseY - 0.5) * b.depth;
+      const grad = ctx.createRadialGradient(x, y, 0, x, y, b.r);
+      grad.addColorStop(0, b.color + "55");
+      grad.addColorStop(1, b.color + "00");
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(x, y, b.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalCompositeOperation = "source-over";
+    requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+}
+initBgCanvas();
+
+// ---------- Botones magnéticos: siguen un poco al mouse al pasar cerca ----------
+document.querySelectorAll(".btn").forEach((btn) => {
+  btn.addEventListener("mousemove", (e) => {
+    const rect = btn.getBoundingClientRect();
+    const relX = e.clientX - rect.left - rect.width / 2;
+    const relY = e.clientY - rect.top - rect.height / 2;
+    btn.style.transform = `translate(${relX * 0.18}px, ${relY * 0.35}px) scale(1.04)`;
+  });
+  btn.addEventListener("mouseleave", () => {
+    btn.style.transform = "";
+  });
+});
+
 // ---------- Confetti de celebración ----------
 function celebrate() {
   const colors = ["#ff6b6b", "#ffa94d", "#ffd43b", "#20c997", "#cc5de8"];
