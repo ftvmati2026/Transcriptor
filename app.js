@@ -55,6 +55,65 @@ function tickClock() {
 tickClock();
 setInterval(tickClock, 1000);
 
+// ---------- Doodles de fondo: varios diseños, generados a montones ----------
+const DOODLE_ICONS = [
+  // nota musical
+  '<path d="M9 18V5l12-2v13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6" cy="18" r="3" stroke="currentColor" stroke-width="1.6"/><circle cx="18" cy="16" r="3" stroke="currentColor" stroke-width="1.6"/>',
+  // micrófono
+  '<path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z" stroke="currentColor" stroke-width="1.6"/><path d="M19 11a7 7 0 0 1-14 0M12 18v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>',
+  // cámara / video
+  '<rect x="3" y="6" width="18" height="12" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M3 9h18M8 6v3M16 6v3" stroke="currentColor" stroke-width="1.6"/>',
+  // play
+  '<circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M10 8.5v7l6-3.5-6-3.5Z" fill="currentColor"/>',
+  // ecualizador
+  '<path d="M4 12h3l2-7 4 14 2-7h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>',
+  // casita
+  '<path d="M4 11 12 4l8 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 10v9h12v-9" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><rect x="10" y="14" width="4" height="5" stroke="currentColor" stroke-width="1.6"/>',
+  // joystick tipo PlayStation
+  '<rect x="3" y="8" width="18" height="10" rx="5" stroke="currentColor" stroke-width="1.6"/><path d="M8 11v4M6 13h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="16" cy="11.5" r="1" fill="currentColor"/><circle cx="18" cy="13.5" r="1" fill="currentColor"/><circle cx="14" cy="13.5" r="1" fill="currentColor"/><circle cx="16" cy="15.5" r="1" fill="currentColor"/>',
+  // pelota de fútbol
+  '<circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M12 8l3 2.2-1.1 3.5H10.1L9 10.2 12 8Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M12 8V5M9 10.2 6.5 8.3M15 10.2l2.5-1.9M10.9 13.7 9.7 17.3M13.1 13.7l1.2 3.6" stroke="currentColor" stroke-width="1.2"/>',
+  // flor
+  '<circle cx="12" cy="12" r="2.2" stroke="currentColor" stroke-width="1.5"/><path d="M12 4.5a2.5 2.5 0 0 1 0 5 2.5 2.5 0 0 1 0-5ZM12 14.5a2.5 2.5 0 0 1 0 5 2.5 2.5 0 0 1 0-5ZM4.5 12a2.5 2.5 0 0 1 5 0 2.5 2.5 0 0 1-5 0ZM14.5 12a2.5 2.5 0 0 1 5 0 2.5 2.5 0 0 1-5 0Z" stroke="currentColor" stroke-width="1.4"/>',
+  // estrella
+  '<path d="m12 3 2.6 5.6 6.1.6-4.6 4.1 1.3 6-5.4-3.2-5.4 3.2 1.3-6-4.6-4.1 6.1-.6L12 3Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>',
+  // corazón
+  '<path d="M12 20s-7.5-4.8-9.7-9.4C.7 7.1 2.6 4 6 4c2 0 3.5 1.1 4 2.5C10.5 5.1 12 4 14 4c3.4 0 5.3 3.1 3.7 6.6C19.5 15.2 12 20 12 20Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>',
+  // nube
+  '<path d="M6.5 17a4 4 0 0 1-.5-8 5 5 0 0 1 9.6-1.6A4.5 4.5 0 0 1 17.5 17h-11Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>',
+  // rayo
+  '<path d="M13 3 6 13h5l-1 8 7-11h-5l1-7Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>',
+  // auriculares
+  '<path d="M4 14v-2a8 8 0 0 1 16 0v2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><rect x="3" y="13" width="4" height="6" rx="1.5" stroke="currentColor" stroke-width="1.6"/><rect x="17" y="13" width="4" height="6" rx="1.5" stroke="currentColor" stroke-width="1.6"/>',
+  // cohete
+  '<path d="M12 3c3 2 4 6 3.2 10.5L12 17l-3.2-3.5C8 9 9 5 12 3Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="12" cy="9" r="1.4" stroke="currentColor" stroke-width="1.3"/><path d="M8.8 13.5 6 15l1-3.3M15.2 13.5 18 15l-1-3.3M10.3 17l-.8 3.2 2.5-1.6 2.5 1.6-.8-3.2" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>',
+  // libro
+  '<path d="M4 5.5c2.5-1 5-1 8 0v13c-3-1-5.5-1-8 0v-13ZM20 5.5c-2.5-1-5-1-8 0v13c3-1 5.5-1 8 0v-13Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>',
+];
+
+function buildDoodleField(count = 70) {
+  const container = document.getElementById("doodles");
+  if (!container) return;
+  container.innerHTML = "";
+  for (let i = 0; i < count; i++) {
+    const inner = DOODLE_ICONS[Math.floor(Math.random() * DOODLE_ICONS.length)];
+    const size = 20 + Math.random() * 30;
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("fill", "none");
+    svg.classList.add("doodle");
+    svg.innerHTML = inner;
+    svg.style.width = `${size}px`;
+    svg.style.top = `${Math.random() * 96}%`;
+    svg.style.left = `${Math.random() * 96}%`;
+    svg.style.opacity = (0.28 + Math.random() * 0.3).toFixed(2);
+    svg.style.animationDuration = `${7 + Math.random() * 8}s`;
+    svg.style.animationDelay = `${Math.random() * 5}s`;
+    container.appendChild(svg);
+  }
+}
+buildDoodleField(70);
+
 // ---------- Fondo animado: manchas de color tipo "ambient glow" ----------
 // Unas cuantas manchas de color grandes y difusas que flotan solas y
 // reaccionan un poco a dónde está el mouse (efecto de profundidad/parallax),
@@ -125,15 +184,16 @@ document.querySelectorAll(".btn").forEach((btn) => {
 // ---------- Confetti de celebración ----------
 function celebrate() {
   const colors = ["#ff6b6b", "#ffa94d", "#ffd43b", "#20c997", "#cc5de8"];
-  for (let i = 0; i < 24; i++) {
+  for (let i = 0; i < 240; i++) {
     const piece = document.createElement("div");
     piece.className = "confetti-piece";
     piece.style.left = `${Math.random() * 100}vw`;
     piece.style.background = colors[Math.floor(Math.random() * colors.length)];
-    piece.style.setProperty("--drift", `${(Math.random() - 0.5) * 200}px`);
-    piece.style.animationDuration = `${1.1 + Math.random() * 0.8}s`;
+    piece.style.setProperty("--drift", `${(Math.random() - 0.5) * 260}px`);
+    piece.style.animationDuration = `${1.1 + Math.random() * 1.1}s`;
+    piece.style.animationDelay = `${Math.random() * 0.4}s`;
     document.body.appendChild(piece);
-    setTimeout(() => piece.remove(), 2200);
+    setTimeout(() => piece.remove(), 2600);
   }
 }
 

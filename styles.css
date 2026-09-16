@@ -69,19 +69,10 @@ body {
 
 .doodle {
   position: absolute;
-  opacity: 0.35;
-  color: #ffffff;
-  filter: drop-shadow(0 6px 10px rgba(15, 42, 67, 0.08));
+  opacity: 0.5;
+  color: #0f2a43;
   animation: floaty 9s ease-in-out infinite;
 }
-
-.doodle.d1 { top: 8%;  left: 6%;  width: 46px; animation-duration: 8s; }
-.doodle.d2 { top: 18%; right: 10%; width: 34px; animation-duration: 10s; animation-delay: 0.5s; }
-.doodle.d3 { bottom: 22%; left: 9%; width: 40px; animation-duration: 11s; animation-delay: 1.2s; }
-.doodle.d4 { bottom: 12%; right: 14%; width: 52px; animation-duration: 9s; animation-delay: 0.3s; }
-.doodle.d5 { top: 42%; left: 45%; width: 30px; animation-duration: 12s; animation-delay: 0.8s; opacity: 0.25; }
-.doodle.d6 { top: 65%; right: 30%; width: 38px; animation-duration: 10.5s; animation-delay: 1.6s; }
-.doodle.d7 { top: 6%; left: 42%; width: 28px; animation-duration: 13s; animation-delay: 0.2s; opacity: 0.22; }
 
 @keyframes floaty {
   0%, 100% { transform: translateY(0) rotate(0deg); }
@@ -96,7 +87,7 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 0.6rem;
-  padding: 1.1rem 1.5rem;
+  padding: 0.85rem 1.5rem;
 }
 
 .topbar-left {
@@ -145,14 +136,14 @@ main {
   z-index: 2;
   max-width: 720px;
   margin: 0 auto;
-  padding: 2rem 1.5rem 5rem;
+  padding: 0.5rem 1.5rem 3rem;
 }
 
 .hero {
   display: flex;
   align-items: center;
   gap: 1.5rem;
-  margin-bottom: 2.5rem;
+  margin-bottom: 1.6rem;
   animation: riseIn 0.7s ease both;
 }
 
@@ -185,27 +176,20 @@ main {
   font-weight: 500;
 }
 
-/* ---------- Mascota ---------- */
+/* ---------- Mascota (perrito) ---------- */
 .mascot {
   flex-shrink: 0;
-  width: 92px;
-  height: 92px;
+  width: 150px;
+  height: auto;
+  max-height: 190px;
+  object-fit: contain;
+  filter: drop-shadow(0 14px 20px rgba(15, 42, 67, 0.25));
   animation: bob 3.4s ease-in-out infinite;
 }
 
 @keyframes bob {
-  0%, 100% { transform: translateY(0) rotate(-2deg); }
-  50% { transform: translateY(-10px) rotate(2deg); }
-}
-
-.mascot-eye {
-  animation: blink 4.5s infinite;
-  transform-origin: center;
-}
-
-@keyframes blink {
-  0%, 92%, 100% { transform: scaleY(1); }
-  95% { transform: scaleY(0.1); }
+  0%, 100% { transform: translateY(0) rotate(-1.5deg); }
+  50% { transform: translateY(-10px) rotate(1.5deg); }
 }
 
 /* ---------- Tarjetas "glass" ---------- */
@@ -526,6 +510,19 @@ main {
   font-weight: 500;
 }
 
+.credit {
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.credit p {
+  font-family: var(--font-head);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin: 0;
+}
+
 .hidden { display: none; }
 
 @keyframes riseIn {
@@ -554,5 +551,5 @@ main {
 
 @media (max-width: 480px) {
   .hero { flex-direction: column; align-items: flex-start; }
-  .mascot { width: 72px; height: 72px; }
+  .mascot { width: 110px; max-height: 140px; }
 }
