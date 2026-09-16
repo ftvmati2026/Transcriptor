@@ -243,11 +243,14 @@ function transcribeChunk(chunkId, audioFloat32, language) {
       }
     };
     w.addEventListener("message", handler);
-    // Transferimos el buffer para no copiarlo (más rápido con archivos largos)
-    const buf = audioFloat32.buffer.slice(0);
+    // audioFloat32 es un subarray (vista) sobre el buffer completo del audio.
+    // Float32Array.prototype.slice() copia SOLO el rango de este chunk a un
+    // buffer nuevo del tamaño justo — así el worker recibe únicamente este
+    // segmento, no el audio entero.
+    const chunkCopy = audioFloat32.slice();
     w.postMessage(
-      { type: "transcribe-chunk", chunkId, audio: new Float32Array(buf), language },
-      [buf]
+      { type: "transcribe-chunk", chunkId, audio: chunkCopy, language },
+      [chunkCopy.buffer]
     );
   });
 }
