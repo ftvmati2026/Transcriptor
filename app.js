@@ -46,6 +46,29 @@ const audioResultSection = document.getElementById("audioResultSection");
 const audioPreview = document.getElementById("audioPreview");
 const btnDownloadAudio = document.getElementById("btnDownloadAudio");
 const langSelect = document.getElementById("langSelect");
+const clockEl = document.getElementById("clock");
+
+// ---------- Reloj en vivo ----------
+function tickClock() {
+  clockEl.textContent = new Date().toLocaleTimeString("es-AR", { hour12: false });
+}
+tickClock();
+setInterval(tickClock, 1000);
+
+// ---------- Confetti de celebración ----------
+function celebrate() {
+  const colors = ["#ff6b6b", "#ffa94d", "#ffd43b", "#20c997", "#cc5de8"];
+  for (let i = 0; i < 24; i++) {
+    const piece = document.createElement("div");
+    piece.className = "confetti-piece";
+    piece.style.left = `${Math.random() * 100}vw`;
+    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.setProperty("--drift", `${(Math.random() - 0.5) * 200}px`);
+    piece.style.animationDuration = `${1.1 + Math.random() * 0.8}s`;
+    document.body.appendChild(piece);
+    setTimeout(() => piece.remove(), 2200);
+  }
+}
 
 // ---------- Utilidades UI ----------
 function humanSize(bytes) {
@@ -290,6 +313,7 @@ async function runTranscription(file) {
 
     setProgress("Listo", 100, `${totalChunks} segmento(s) procesados`);
     resultSection.classList.remove("hidden");
+    celebrate();
   } catch (err) {
     setProgress("Error", 0, String(err.message || err));
     console.error(err);
@@ -316,6 +340,7 @@ async function runExtractAudioOnly(file) {
 
     setProgress("Listo", 100);
     audioResultSection.classList.remove("hidden");
+    celebrate();
   } catch (err) {
     setProgress("Error", 0, String(err.message || err));
     console.error(err);
