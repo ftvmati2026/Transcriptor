@@ -45,6 +45,7 @@ const btnCopy = document.getElementById("btnCopy");
 const audioResultSection = document.getElementById("audioResultSection");
 const audioPreview = document.getElementById("audioPreview");
 const btnDownloadAudio = document.getElementById("btnDownloadAudio");
+const langSelect = document.getElementById("langSelect");
 
 // ---------- Utilidades UI ----------
 function humanSize(bytes) {
@@ -227,7 +228,7 @@ function ensureWorkerLoaded() {
   });
 }
 
-function transcribeChunk(chunkId, audioFloat32) {
+function transcribeChunk(chunkId, audioFloat32, language) {
   return new Promise((resolve, reject) => {
     const w = getWorker();
     const handler = (e) => {
@@ -244,7 +245,10 @@ function transcribeChunk(chunkId, audioFloat32) {
     w.addEventListener("message", handler);
     // Transferimos el buffer para no copiarlo (más rápido con archivos largos)
     const buf = audioFloat32.buffer.slice(0);
-    w.postMessage({ type: "transcribe-chunk", chunkId, audio: new Float32Array(buf) }, [buf]);
+    w.postMessage(
+      { type: "transcribe-chunk", chunkId, audio: new Float32Array(buf), language },
+      [buf]
+    );
   });
 }
 
@@ -276,7 +280,7 @@ async function runTranscription(file) {
         `Segmento ${i + 1} de ${totalChunks}`
       );
 
-      const text = await transcribeChunk(i, chunk);
+      const text = await transcribeChunk(i, chunk, langSelect.value);
       fullText += (fullText ? " " : "") + text;
       transcriptOutput.value = fullText;
     }
