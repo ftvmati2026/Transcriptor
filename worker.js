@@ -1,6 +1,8 @@
 // worker.js
 // Corre en un hilo aparte: carga el modelo Whisper una sola vez y transcribe
 // los chunks de audio (Float32Array a 16kHz mono) que le manda app.js.
+// Ahora app.js puede levantar VARIAS copias de este worker en paralelo
+// (una por núcleo disponible) para procesar varios segmentos a la vez.
 
 import { pipeline, env } from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.0/+esm";
 
@@ -9,30 +11,40 @@ import { pipeline, env } from "https://cdn.jsdelivr.net/npm/@huggingface/transfo
 env.allowLocalModels = false;
 
 let transcriber = null;
+let loadedModelId = null;
 
-async function getTranscriber() {
-  if (transcriber) return transcriber;
-  transcriber = await pipeline(
-    "automatic-speech-recognition",
-    // whisper-base multilingüe: buen balance velocidad/calidad para correr
-    // en CPU/WASM en cualquier compu. Se puede subir a "small" si sobra
-    // potencia, o bajar a "tiny" si hace falta más velocidad.
-    "Xenova/whisper-base",
-    {
-      progress_callback: (data) => {
-        postMessage({ type: "model-progress", data });
-      },
+async function getTranscriber(modelId) {
+  if (transcriber && loadedModelId === modelId) return transcriber;
+
+  // Intentamos acelerar con la GPU vía WebGPU si el navegador la soporta;
+  // si falla por lo que sea, caemos de nuevo a CPU (WASM) sin romper nada.
+  const tryDevices = navigator.gpu ? ["webgpu", "wasm"] : ["wasm"];
+  let lastErr = null;
+  for (const device of tryDevices) {
+    try {
+      transcriber = await pipeline("automatic-speech-recognition", modelId, {
+        device,
+        progress_callback: (data) => {
+          postMessage({ type: "model-progress", data });
+        },
+      });
+      loadedModelId = modelId;
+      postMessage({ type: "device-used", device });
+      return transcriber;
+    } catch (err) {
+      lastErr = err;
     }
-  );
-  return transcriber;
+  }
+  throw lastErr;
 }
 
 onmessage = async (e) => {
   const { type } = e.data;
 
   if (type === "load") {
+    const { modelId } = e.data;
     try {
-      await getTranscriber();
+      await getTranscriber(modelId);
       postMessage({ type: "model-ready" });
     } catch (err) {
       postMessage({ type: "error", message: String(err) });
@@ -41,9 +53,9 @@ onmessage = async (e) => {
   }
 
   if (type === "transcribe-chunk") {
-    const { chunkId, audio, language } = e.data;
+    const { chunkId, audio, language, modelId } = e.data;
     try {
-      const model = await getTranscriber();
+      const model = await getTranscriber(modelId);
       // audio ya viene troceado en clips cortos (<=30s) desde app.js,
       // así que no hace falta el chunking interno del pipeline.
       const result = await model(audio, {

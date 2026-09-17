@@ -21,8 +21,7 @@ const SAMPLE_RATE = 16000;
 let currentFile = null;
 let ffmpeg = null;
 let ffmpegReady = false;
-let worker = null;
-let workerReady = false;
+// (el worker único fue reemplazado por un pool — ver más abajo)
 
 // ---------- Elementos ----------
 const dropzone = document.getElementById("dropzone");
@@ -46,6 +45,7 @@ const audioResultSection = document.getElementById("audioResultSection");
 const audioPreview = document.getElementById("audioPreview");
 const btnDownloadAudio = document.getElementById("btnDownloadAudio");
 const langSelect = document.getElementById("langSelect");
+const modelSelect = document.getElementById("modelSelect");
 const clockEl = document.getElementById("clock");
 
 // ---------- Reloj en vivo ----------
@@ -344,65 +344,107 @@ function parseWav16Mono(arrayBuffer) {
   return samples;
 }
 
-// ---------- Worker de transcripción ----------
-function getWorker() {
-  if (worker) return worker;
-  worker = new Worker("worker.js", { type: "module" });
-  return worker;
+// ---------- Pool de workers de transcripción (en paralelo) ----------
+// Usamos varios workers a la vez (uno por núcleo disponible, con un tope)
+// para aprovechar todos los núcleos de la compu en vez de uno solo.
+const POOL_SIZE = Math.max(1, Math.min(4, navigator.hardwareConcurrency || 2));
+let workerPool = [];
+let poolReady = false;
+
+function createPool() {
+  if (workerPool.length) return workerPool;
+  workerPool = Array.from({ length: POOL_SIZE }, () => ({
+    worker: new Worker("worker.js", { type: "module" }),
+    busy: false,
+  }));
+  return workerPool;
 }
 
-function ensureWorkerLoaded() {
-  return new Promise((resolve, reject) => {
-    const w = getWorker();
-    if (workerReady) return resolve();
-    setProgress("Cargando el modelo de voz…", 0, "Solo tarda la primera vez; después queda en caché.");
-    const handler = (e) => {
-      const msg = e.data;
-      if (msg.type === "model-progress") {
-        const d = msg.data;
-        if (d && d.status === "progress" && d.total) {
-          const pct = (d.loaded / d.total) * 100;
-          setProgress("Descargando modelo de voz…", pct, d.file || "");
-        }
-      } else if (msg.type === "model-ready") {
-        workerReady = true;
-        w.removeEventListener("message", handler);
-        resolve();
-      } else if (msg.type === "error") {
-        w.removeEventListener("message", handler);
-        reject(new Error(msg.message));
-      }
-    };
-    w.addEventListener("message", handler);
-    w.postMessage({ type: "load" });
+function ensurePoolLoaded(modelId) {
+  const pool = createPool();
+  if (poolReady) return Promise.resolve();
+
+  setProgress(
+    "Cargando el modelo de voz…",
+    0,
+    `Preparando ${pool.length} proceso(s) en paralelo. Solo tarda la primera vez.`
+  );
+
+  let loadedCount = 0;
+  return Promise.all(
+    pool.map(
+      (slot) =>
+        new Promise((resolve, reject) => {
+          const handler = (e) => {
+            const msg = e.data;
+            if (msg.type === "model-progress") {
+              const d = msg.data;
+              if (d && d.status === "progress" && d.total) {
+                setProgress("Descargando modelo de voz…", (d.loaded / d.total) * 100, d.file || "");
+              }
+            } else if (msg.type === "model-ready") {
+              loadedCount++;
+              setProgress("Cargando el modelo de voz…", (loadedCount / pool.length) * 100);
+              slot.worker.removeEventListener("message", handler);
+              resolve();
+            } else if (msg.type === "error") {
+              slot.worker.removeEventListener("message", handler);
+              reject(new Error(msg.message));
+            }
+          };
+          slot.worker.addEventListener("message", handler);
+          slot.worker.postMessage({ type: "load", modelId });
+        })
+    )
+  ).then(() => {
+    poolReady = true;
   });
 }
 
-function transcribeChunk(chunkId, audioFloat32, language) {
+function transcribeOnSlot(slot, chunkId, audioFloat32, language, modelId) {
   return new Promise((resolve, reject) => {
-    const w = getWorker();
     const handler = (e) => {
       const msg = e.data;
       if (msg.chunkId !== chunkId) return;
       if (msg.type === "chunk-result") {
-        w.removeEventListener("message", handler);
+        slot.worker.removeEventListener("message", handler);
         resolve(msg.text);
       } else if (msg.type === "error") {
-        w.removeEventListener("message", handler);
+        slot.worker.removeEventListener("message", handler);
         reject(new Error(msg.message));
       }
     };
-    w.addEventListener("message", handler);
-    // audioFloat32 es un subarray (vista) sobre el buffer completo del audio.
-    // Float32Array.prototype.slice() copia SOLO el rango de este chunk a un
-    // buffer nuevo del tamaño justo — así el worker recibe únicamente este
-    // segmento, no el audio entero.
+    slot.worker.addEventListener("message", handler);
     const chunkCopy = audioFloat32.slice();
-    w.postMessage(
-      { type: "transcribe-chunk", chunkId, audio: chunkCopy, language },
+    slot.worker.postMessage(
+      { type: "transcribe-chunk", chunkId, audio: chunkCopy, language, modelId },
       [chunkCopy.buffer]
     );
   });
+}
+
+// Reparte todos los chunks entre los workers libres del pool a medida que
+// se van desocupando, y junta los resultados en el orden correcto al final
+// (en paralelo pueden terminar desordenados).
+async function transcribeAllChunks(chunks, language, modelId, onProgress) {
+  const pool = createPool();
+  const results = new Array(chunks.length);
+  let nextIndex = 0;
+  let done = 0;
+
+  async function worker(slot) {
+    while (nextIndex < chunks.length) {
+      const myIndex = nextIndex++;
+      slot.busy = true;
+      results[myIndex] = await transcribeOnSlot(slot, myIndex, chunks[myIndex], language, modelId);
+      slot.busy = false;
+      done++;
+      onProgress(done, chunks.length);
+    }
+  }
+
+  await Promise.all(pool.map(worker));
+  return results;
 }
 
 // ---------- Pipeline completo: transcripción ----------
@@ -416,27 +458,29 @@ async function runTranscription(file) {
     setProgress("Preparando el audio…", 100);
     const pcm = parseWav16Mono(wavBuffer);
 
-    await ensureWorkerLoaded();
+    const modelId = modelSelect.value;
+    await ensurePoolLoaded(modelId);
 
     const samplesPerChunk = CHUNK_SECONDS * SAMPLE_RATE;
     const totalChunks = Math.max(1, Math.ceil(pcm.length / samplesPerChunk));
-    let fullText = "";
-
+    const chunks = [];
     for (let i = 0; i < totalChunks; i++) {
       const start = i * samplesPerChunk;
       const end = Math.min(pcm.length, start + samplesPerChunk);
-      const chunk = pcm.subarray(start, end);
-
-      setProgress(
-        "Transcribiendo…",
-        (i / totalChunks) * 100,
-        `Segmento ${i + 1} de ${totalChunks}`
-      );
-
-      const text = await transcribeChunk(i, chunk, langSelect.value);
-      fullText += (fullText ? " " : "") + text;
-      transcriptOutput.value = fullText;
+      chunks.push(pcm.subarray(start, end));
     }
+
+    setProgress("Transcribiendo…", 0, `0 de ${totalChunks} segmentos (${workerPool.length} en paralelo)`);
+
+    const results = await transcribeAllChunks(chunks, langSelect.value, modelId, (done, total) => {
+      setProgress("Transcribiendo…", (done / total) * 100, `${done} de ${total} segmentos (${workerPool.length} en paralelo)`);
+      // Vamos mostrando lo que ya está listo, aunque llegue desordenado,
+      // para que se sienta que avanza; al final se reordena solo.
+      transcriptOutput.value = results.filter(Boolean).join(" ");
+    });
+
+    const fullText = results.join(" ");
+    transcriptOutput.value = fullText;
 
     setProgress("Listo", 100, `${totalChunks} segmento(s) procesados`);
     resultSection.classList.remove("hidden");

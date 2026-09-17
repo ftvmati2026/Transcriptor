@@ -57,6 +57,13 @@
           <option value="portuguese">Portugués</option>
         </select>
       </div>
+      <div class="lang-row">
+        <label for="modelSelect">Velocidad:</label>
+        <select id="modelSelect">
+          <option value="Xenova/whisper-tiny" selected>Rápido (recomendado para audios largos)</option>
+          <option value="Xenova/whisper-base">Más preciso (más lento)</option>
+        </select>
+      </div>
     </section>
 
     <section id="progressSection" class="progress-section card hidden">
@@ -92,7 +99,7 @@
     </section>
 
     <section class="note">
-      <p>La primera vez que transcribís, el navegador descarga el modelo de reconocimiento de voz (puede tardar según tu conexión). Después queda guardado localmente y arranca al toque.</p>
+      <p>La primera vez que transcribís, el navegador descarga el modelo de reconocimiento de voz (puede tardar según tu conexión). Después queda guardado localmente y arranca al toque. Los segmentos se procesan en paralelo usando varios núcleos de tu compu para ir más rápido.</p>
     </section>
 
     <footer class="credit">

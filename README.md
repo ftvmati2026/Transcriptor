@@ -58,6 +58,25 @@ MP3, M4A, FLAC, OGG, AAC, WMA, etc. La única excepción sería un códec
 realmente exótico que el build estándar de ffmpeg.wasm no incluya, algo muy
 poco común en archivos de uso normal.
 
+## Rendimiento (qué tan rápido transcribe)
+
+Todo corre en la CPU/GPU del navegador, sin servidor. Desde esta versión:
+- Los segmentos se procesan en paralelo (hasta 4 a la vez, según los núcleos
+  de la compu), en vez de uno por uno.
+- Si el navegador soporta WebGPU, se usa la GPU automáticamente (más rápido);
+  si no, cae solo a CPU (WASM) sin romper nada.
+- Hay un selector de velocidad: "Rápido" usa `whisper-tiny` (recomendado para
+  audios largos), "Más preciso" usa `whisper-base` (mejor calidad, más lento).
+
+Aun así, esto **no** compite con un servicio pago con GPU dedicada. Como
+referencia aproximada y muy variable según la compu: un audio de más o menos
+una hora puede tardar desde unos 10-15 minutos (compu potente, modelo
+"Rápido", GPU vía WebGPU) hasta bastante más de una hora (compu modesta,
+modelo "Más preciso", sin WebGPU). Si necesitás garantizar minutos exactos
+para audios muy largos de forma consistente, la única forma real es sumar
+una API paga de transcripción (corre en GPU de verdad) — lo cual implica
+dejar de ser 100% gratis y sin servidor.
+
 ## Limitaciones conocidas
 
 - **Corrección gramatical**: no se aplica corrección gramatical completa
